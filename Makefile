@@ -1,21 +1,11 @@
 include local.env
 export
 
-SRC=src
-
-style:
-	###### Running style analysis ######
-	poetry run flake8 $(SRC)
-
-typecheck:
-	###### Running static type analysis ######
-	poetry run mypy $(SRC)
-
-doccheck:
-	###### Running documentation analysis ######
-	poetry run pydocstyle $(SRC)
-
-static-tests: style typecheck doccheck
+static-tests:
+	###### Running static tests ######
+	poetry run flake8 src
+	poetry run mypy src
+	poetry run pydocstyle src
 
 import-test:
 	###### Running import tests ######
