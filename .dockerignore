@@ -1,0 +1,21 @@
+# Git files
+.git
+.gitignore
+
+# IDE config files
+.vscode
+.env
+.idea
+
+# Python files
+.mypy_cache
+*__pycache__*
+.venv
+.pytest_cache
+.import_linter_cache
+
+# Others
+Dockerfile
+README.md
+local.env
+settings.json

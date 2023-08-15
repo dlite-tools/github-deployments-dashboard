@@ -1,0 +1,15 @@
+# IDE config files
+.vscode
+.env
+.idea
+
+# Python files
+.mypy_cache
+*__pycache__*
+.venv
+.pytest_cache
+.import_linter_cache
+
+# Others
+local.env
+settings.json
