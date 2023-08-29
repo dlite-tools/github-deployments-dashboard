@@ -9,6 +9,7 @@
 .venv
 .pytest_cache
 .import_linter_cache
+*.egg-info
 
 # Others
 local.env
