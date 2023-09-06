@@ -15,15 +15,19 @@ dashboard:
 	###### Running dashboard ######
 	poetry run streamlit run src/main.py --server.runOnSave true
 
-docker-build:
-	###### Building docker ######
+load-data:
+	###### Loading data ######
+	poetry run python src/load_data.py
+
+build-image:
+	###### Building image ######
 	docker build --rm -t dashboard:dev .
 
-docker-run:
-	###### Running docker ######
+run-image:
+	###### Running container ######
 	docker run --rm \
 		-p 8501:8501 \
 		--name dashboard-dev \
 		--env-file local.env \
-		--volume ${PWD}/settings.json:/dashboard/settings.json \
+		--volume ./settings.json:/dashboard/settings.json \
 		dashboard:dev
