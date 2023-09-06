@@ -49,4 +49,5 @@ def get_deployment(organization: str, repository: str, environment: str) -> list
     return call_github(
         f"repos/{organization}/{repository}/deployments",
         params=params,
+        number_of_pages=1,
     )
