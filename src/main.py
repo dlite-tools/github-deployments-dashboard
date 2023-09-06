@@ -1,7 +1,5 @@
 """The main file of the Streamlit app."""
 from datetime import datetime
-from concurrent import futures
-from json import load as load_json
 from os import getenv
 
 import streamlit as st
@@ -9,14 +7,17 @@ import streamlit as st
 from streamlit.delta_generator import DeltaGenerator
 
 from src.models.settings import (
-    Deployment,
     GroupSettings,
-    Repository,
+    TabSettings,
     Settings,
 )
-from src.tools.github_data import (
-    get_repositories,
-    get_deployment,
+from src.models.repository import (
+    Repository,
+)
+from src.tools.commons import (
+    column_ratio_is_valid,
+    load_settings,
+    load_repositories,
 )
 from src.styles import (
     CENTER_HEADER,
@@ -27,78 +28,22 @@ from src.styles import (
 DASHBOARD_SETTINGS_FILE = getenv("DASHBOARD_SETTINGS_FILE", "settings.json")
 DASHBOARD_REPOSITORY_HEADER = getenv("DASHBOARD_REPOSITORY_HEADER", "Repository")
 DASHBOARD_REPOSITORY_EMOJI = getenv("DASHBOARD_REPOSITORY_EMOJI", "gear")
+DASHBOARD_MAX_WORKERS = int(getenv("DASHBOARD_MAX_WORKERS", 4))
 
 
 @st.cache_resource
-def load_settings(path: str) -> Settings:
+def get_settings(path: str) -> Settings:
     """Load the settings from a JSON file."""
-    with open(path, "r") as file:
-        settings = load_json(file)
-
-    return Settings(**settings)
+    return load_settings(path)
 
 
 @st.cache_data(ttl=60 * 60 * 1, show_spinner=True)
-def load_repositories() -> None:
+def get_repositories(organization: str, _tabs: list[TabSettings], max_workers: int) -> dict[str, Repository]:
     """Load the repositories data from GitHub."""
-    def _filter_topics(group: GroupSettings):
-        group.repositories = [
-            Repository(
-                name=repo["name"],
-                url=repo["html_url"],
-                environments=group.environments,
-                deployments={},
-            )
-            for repo in filter(
-                lambda repo: not repo["archived"] and set(group.topics).issubset(repo["topics"]),
-                all_repos,
-            )
-        ]
-
-    def _get_deployments(repo: Repository):
-        for env in repo.environments:
-            deploy = get_deployment(SETTINGS.organization, repo.name, env)
-            if len(deploy) > 0:
-                repo.deployments[env] = Deployment(
-                    ref=deploy[0]["ref"],
-                    url=deploy[0]["url"],
-                    created_at=deploy[0]["created_at"],
-                )
-
-    # Get all repositories from the organization
-    all_repos: list[dict] = [
-        {
-            "name": repo["name"],
-            "topics": set(repo["topics"]),
-            "html_url": repo["html_url"],
-            "archived": repo["archived"],
-        }
-        for repo in get_repositories(SETTINGS.organization)
-    ]
-
-    # Filter repositories by topics for each group (on each tab)
-    with futures.ThreadPoolExecutor() as executor:
-        executions = [
-            executor.submit(_filter_topics, group)
-            for group in [group for tab in SETTINGS.tabs for group in tab.groups]
-        ]
-        _ = [execution.result(timeout=5) for execution in executions]
-
-    # Get the deployments for each repository
-    with futures.ThreadPoolExecutor() as executor:
-        executions = [
-            executor.submit(_get_deployments, repo)
-            for repo in [repo for tab in SETTINGS.tabs for group in tab.groups for repo in group.repositories]
-        ]
-        _ = [execution.result(timeout=10) for execution in executions]
+    return load_repositories(organization, _tabs, max_workers)
 
 
-def column_ratio_is_valid(column_ratio: list[float]) -> bool:
-    """Check if the sum of the column ratios is less than 1.0."""
-    return sum(column_ratio) < 1
-
-
-def create_group(area: DeltaGenerator, group: GroupSettings):
+def create_group(area: DeltaGenerator, group: GroupSettings, repos: dict[str, Repository]):
     """Create a new group on the dashboard."""
     env_column_ratio = [group.environment_column_ratio] * len(group.environments)
 
@@ -121,10 +66,10 @@ def create_group(area: DeltaGenerator, group: GroupSettings):
     for repo in group.repositories:
         with area.container():
             cols = st.columns(column_ratio)
-            cols[0].markdown(f"[:{DASHBOARD_REPOSITORY_EMOJI}:]({repo.url}) {repo.name}")
+            cols[0].markdown(f"[:{DASHBOARD_REPOSITORY_EMOJI}:]({repos[repo].url}) {repo}")
             for idx, env in enumerate(group.environments, start=1):
-                text = repo.deployments[env].ref if env in repo.deployments else "-"
-                time = repo.deployments[env].created_at.strftime("%Y-%m-%d (%H:%M:%S)") if env in repo.deployments else ""
+                text = repos[repo].deployments[env].ref if env in repos[repo].deployments else "-"
+                time = repos[repo].deployments[env].created_at.strftime("%Y-%m-%d (%H:%M:%S)") if env in repos[repo].deployments else ""
                 cols[idx].markdown(CENTER_REF.format(text=text, time=time), unsafe_allow_html=True)
         area.markdown(HR_NO_MARGIN, unsafe_allow_html=True)
 
@@ -146,15 +91,16 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-SETTINGS = load_settings(DASHBOARD_SETTINGS_FILE)
 
-load_repositories()
+SETTINGS = get_settings(DASHBOARD_SETTINGS_FILE)
+
+DASHBOARD_REPOS = get_repositories(SETTINGS.organization, SETTINGS.tabs, DASHBOARD_MAX_WORKERS)
 
 st_tabs = st.tabs([tab.title for tab in SETTINGS.tabs])
 
 for st_tab, config_tab in zip(st_tabs, SETTINGS.tabs):
     st_groups = st_tab.tabs([group.title for group in config_tab.groups])
     for st_group, config_group in zip(st_groups, config_tab.groups):
-        create_group(st_group, config_group)
+        create_group(st_group, config_group, DASHBOARD_REPOS)
 
 st.caption(f"Last refresh: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}")
