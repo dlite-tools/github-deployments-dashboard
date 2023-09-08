@@ -9,7 +9,6 @@ from streamlit.delta_generator import DeltaGenerator
 from src.models.settings import (
     GroupSettings,
     TabSettings,
-    Settings,
 )
 from src.models.repository import (
     Repository,
@@ -18,6 +17,7 @@ from src.commons import (
     column_ratio_is_valid,
     load_settings,
     load_repositories,
+    reload_settings,
 )
 from src.styles import (
     CENTER_HEADER,
@@ -29,12 +29,6 @@ DASHBOARD_SETTINGS_FILE = getenv("DASHBOARD_SETTINGS_FILE", "settings.json")
 DASHBOARD_REPOSITORY_HEADER = getenv("DASHBOARD_REPOSITORY_HEADER", "Repository")
 DASHBOARD_REPOSITORY_EMOJI = getenv("DASHBOARD_REPOSITORY_EMOJI", "gear")
 DASHBOARD_MAX_WORKERS = int(getenv("DASHBOARD_MAX_WORKERS", 4))
-
-
-@st.cache_resource
-def get_settings(path: str) -> Settings:
-    """Load the settings from a JSON file."""
-    return load_settings(path)
 
 
 @st.cache_data(ttl=60 * 60 * 1, show_spinner=True)
@@ -95,16 +89,31 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-SETTINGS = get_settings(DASHBOARD_SETTINGS_FILE)
-
-DASHBOARD_REPOS = get_repositories(SETTINGS.organization, SETTINGS.tabs, DASHBOARD_MAX_WORKERS)
+SETTINGS = load_settings(DASHBOARD_SETTINGS_FILE)
 
 st.title("GitHub Deployments")
 
-st_tabs = st.tabs([tab.title for tab in SETTINGS.tabs])
+if len(SETTINGS.tabs) == 0:
+    st.warning("There are no tabs configured.")
+    st.stop()
+
+DASHBOARD_REPOS = get_repositories(SETTINGS.organization, SETTINGS.tabs, DASHBOARD_MAX_WORKERS)
+
+# When refreshed inside the cache TTL time, the app will not load the repositories
+# for each group in the settings object. This code checks if the repositories are
+# loaded and, if not, it will load them again.
+reload_settings(SETTINGS, DASHBOARD_REPOS)
+
+st_tabs = [st.container()] if len(SETTINGS.tabs) == 1 else st.tabs([tab.title for tab in SETTINGS.tabs])
 
 for st_tab, config_tab in zip(st_tabs, SETTINGS.tabs):
-    st_groups = st_tab.tabs([group.title for group in config_tab.groups])
+
+    if len(config_tab.groups) == 0:
+        st.warning("There are no groups configured.")
+        st.stop()
+
+    st_groups = [st.container()] if len(config_tab.groups) == 1 else st_tab.tabs([group.title for group in config_tab.groups])
+
     for st_group, config_group in zip(st_groups, config_tab.groups):
         create_group(st_group, config_group, DASHBOARD_REPOS)
 
