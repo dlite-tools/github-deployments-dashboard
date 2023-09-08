@@ -10,7 +10,7 @@ WORKDIR $HOMEDIR
 
 ENV PYTHONPATH=$HOMEDIR
 
-EXPOSE 8501
+ENV DASHBOARD_PORT=8501
 
 RUN \
     libDeps='build-essential curl software-properties-common' && \
@@ -27,6 +27,6 @@ RUN \
 
 COPY src $HOMEDIR/src
 
-HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
+HEALTHCHECK CMD curl --fail http://localhost:$DASHBOARD_PORT/_stcore/health
 
-ENTRYPOINT ["streamlit", "run", "src/main.py", "--server.port=8501", "--server.address=0.0.0.0"]
+ENTRYPOINT streamlit run src/main.py --server.port $DASHBOARD_PORT --server.address 0.0.0.0
