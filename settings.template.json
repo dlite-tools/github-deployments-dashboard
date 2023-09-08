@@ -1,0 +1,16 @@
+{
+    "organization": "",
+    "tabs": [
+        {
+            "title": "",
+            "groups": [
+                {
+                    "title": "",
+                    "environments": ["", "", ""],
+                    "environment_column_ratio": 0.2,
+                    "topics": ["", ""]
+                }
+            ]
+        }
+    ]
+}
