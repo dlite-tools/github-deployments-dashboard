@@ -1,8 +1,8 @@
-"""Load Github repositories data."""
+"""Check Github repositories data."""
 from os import getenv
 import json
 
-from src.tools.commons import (
+from src.commons import (
     load_settings,
     load_repositories,
 )

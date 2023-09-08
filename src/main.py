@@ -14,7 +14,7 @@ from src.models.settings import (
 from src.models.repository import (
     Repository,
 )
-from src.tools.commons import (
+from src.commons import (
     column_ratio_is_valid,
     load_settings,
     load_repositories,
@@ -78,23 +78,28 @@ def create_group(area: DeltaGenerator, group: GroupSettings, repos: dict[str, Re
 # ----- Streamlit app ---------------------------------------------------------
 
 
-st.set_page_config(layout="wide")
+st.set_page_config(
+    layout="wide",
+    page_title="GitHub Deployments",
+    page_icon=f":{DASHBOARD_REPOSITORY_EMOJI}:",
+)
 
 st.markdown("""
     <style>
         a {
             text-decoration: none;
-            font-size: 50%;
+            font-size: 60%;
             vertical-align: middle;
             margin-right: 0.25rem;
         }
     </style>
 """, unsafe_allow_html=True)
 
-
 SETTINGS = get_settings(DASHBOARD_SETTINGS_FILE)
 
 DASHBOARD_REPOS = get_repositories(SETTINGS.organization, SETTINGS.tabs, DASHBOARD_MAX_WORKERS)
+
+st.title("GitHub Deployments")
 
 st_tabs = st.tabs([tab.title for tab in SETTINGS.tabs])
 
