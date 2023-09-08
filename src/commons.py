@@ -98,3 +98,25 @@ def load_repositories(organization: str, tabs: list[TabSettings], max_workers: i
         _ = [execution.result() for execution in executions]
 
     return selected_repos
+
+
+def reload_settings(settings: Settings, repos: dict[str, Repository]):
+    """Reload repositories into settings object.
+
+    Parameters
+    ----------
+    settings : Settings
+        The settings object to be reloaded.
+
+    repos : dict[str, Repository]
+        Repositories to be reloaded into the settings object.
+
+    """
+    for tab in settings.tabs:
+        for group in tab.groups:
+            group.repositories = sorted([
+                repo.name for repo in filter(
+                    lambda repo: set(group.topics).issubset(set(repo.topics)),
+                    repos.values(),
+                )
+            ])
