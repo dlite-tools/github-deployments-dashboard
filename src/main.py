@@ -112,7 +112,7 @@ for st_tab, config_tab in zip(st_tabs, SETTINGS.tabs):
         st.warning("There are no groups configured.")
         st.stop()
 
-    st_groups = [st.container()] if len(config_tab.groups) == 1 else st_tab.tabs([group.title for group in config_tab.groups])
+    st_groups = [st_tab.container()] if len(config_tab.groups) == 1 else st_tab.tabs([group.title for group in config_tab.groups])
 
     for st_group, config_group in zip(st_groups, config_tab.groups):
         create_group(st_group, config_group, DASHBOARD_REPOS)
