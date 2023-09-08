@@ -97,14 +97,24 @@ st.markdown("""
 
 SETTINGS = get_settings(DASHBOARD_SETTINGS_FILE)
 
-DASHBOARD_REPOS = get_repositories(SETTINGS.organization, SETTINGS.tabs, DASHBOARD_MAX_WORKERS)
-
 st.title("GitHub Deployments")
 
-st_tabs = st.tabs([tab.title for tab in SETTINGS.tabs])
+if len(SETTINGS.tabs) == 0:
+    st.warning("There are no tabs configured.")
+    st.stop()
+
+DASHBOARD_REPOS = get_repositories(SETTINGS.organization, SETTINGS.tabs, DASHBOARD_MAX_WORKERS)
+
+st_tabs = [st.container()] if len(SETTINGS.tabs) == 1 else st.tabs([tab.title for tab in SETTINGS.tabs])
 
 for st_tab, config_tab in zip(st_tabs, SETTINGS.tabs):
-    st_groups = st_tab.tabs([group.title for group in config_tab.groups])
+
+    if len(config_tab.groups) == 0:
+        st.warning("There are no groups configured.")
+        st.stop()
+
+    st_groups = [st.container()] if len(config_tab.groups) == 1 else st_tab.tabs([group.title for group in config_tab.groups])
+
     for st_group, config_group in zip(st_groups, config_tab.groups):
         create_group(st_group, config_group, DASHBOARD_REPOS)
 
