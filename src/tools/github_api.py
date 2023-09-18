@@ -40,6 +40,9 @@ def call_github_endpoint(
     extra: dict[str, Any] = {}
     endpoint = "https://api.github.com/"
 
+    if len(DASHBOARD_GITHUB_TOKEN) == 0:
+        raise SystemError("No Github token provided. Please set the environment variable: DASHBOARD_GITHUB_TOKEN")
+
     args = {
         "url": endpoint + path,
         "headers": {
