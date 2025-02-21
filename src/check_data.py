@@ -1,10 +1,10 @@
 """Check Github repositories data."""
-from os import getenv
 import json
+from os import getenv
 
 from src.commons import (
-    load_settings,
     load_repositories,
+    load_settings,
 )
 
 DASHBOARD_SETTINGS_FILE = getenv("DASHBOARD_SETTINGS_FILE", "settings.json")

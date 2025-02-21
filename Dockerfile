@@ -1,4 +1,4 @@
-FROM python:3.10-slim-bookworm
+FROM python:3.12-slim-bookworm
 
 ARG HOMEDIR=/dashboard
 
@@ -13,17 +13,15 @@ ENV PYTHONPATH=$HOMEDIR
 ENV DASHBOARD_PORT=8501
 
 RUN \
+    curl -LsSf https://astral.sh/uv/install.sh | sh && \
     libDeps='build-essential curl software-properties-common' && \
     apt-get update -y -qq > /dev/null && \
     apt-get -y -qq install $libDeps --no-install-recommends > /dev/null && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/* /tmp/* /var/tmp/*
 
-COPY pyproject.toml poetry.lock $HOMEDIR
+COPY pyproject.toml uv.lock $HOMEDIR
 
-RUN \
-    pip install poetry==$POETRY_VERSION && \
-    poetry config virtualenvs.create false && \
-    poetry install --no-root --no-dev
+RUN uv sync --no-dev --no-install-project
 
 COPY src $HOMEDIR/src
 

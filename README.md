@@ -7,7 +7,7 @@
   - [Environment Variables](#environment-variables)
   - [Data Quality Check](#data-quality-check)
   - [Running the Dashboard](#running-the-dashboard)
-    - [Using Poetry](#using-poetry)
+    - [Using uv](#using-uv)
     - [Using Docker](#using-docker)
     - [Running Multiple Instances](#running-multiple-instances)
 
@@ -17,7 +17,7 @@
 
 A streamlit dashboard to visualize multiple environments deployments for a Github organization.
 
-The dashboard was designed to run locally using [Poetry](https://python-poetry.org/) or [Docker](https://www.docker.com/).
+The dashboard was designed to run locally using [uv](https://docs.astral.sh/uv/) or [Docker](https://www.docker.com/).
 
 ### Github Deployments
 
@@ -130,7 +130,7 @@ The dashboard has a data quality check to validate the settings file and the Git
 
 To run the data quality check, you can use the command **`make check`**.
 
-**Note**: Make sure that the Poetry virtual environment is installed. If it's not, you can install it with **`make install`**.
+**Note**: Make sure that the uv virtual environment is installed. If it's not, you can install it with **`make install`**.
 
 ### Running the Dashboard
 
@@ -139,9 +139,9 @@ Before running the dashboard, you must create:
 - `local.env` file with the environment variables. There is a template file [template.env](template.env) with the required variables.
 - `settings.json` file with the dashboard settings. There is a template file [settings.template.json](settings.template.json) with the required structure.
 
-#### Using Poetry
+#### Using uv
 
-Make sure that the Poetry virtual environment is installed. If it's not, you can install it with `make install` or `poetry install --no-root`.
+Make sure that the uv virtual environment is installed. If it's not, you can install it with `make install` or `uv sync --no-install-project`.
 
 To run the dashboard, you can use the command **`make dashboard`**.
 
@@ -149,7 +149,7 @@ The dashboard will be available at `http://localhost:8501`.
 
 #### Using Docker
 
-If you don't want to install the dependencies locally and use Poetry, you can use Docker to run the dashboard.
+If you don't want to install the dependencies locally and use uv, you can use Docker to run the dashboard.
 
 You need first to build the dashboard image with the command **`make build`**.
 
@@ -163,11 +163,11 @@ The dashboard will be available at `http://localhost:8501`.
 
 You can run multiple instances of the dashboard with different settings files.
 
-With Poetry, you need to export the environment variables and run the dashboard with the command:
+With uv, you need to export the environment variables and run the dashboard with the command:
 
 ```shell
 export $(cat new-local.env | xargs)
-poetry \
+uv \
     run streamlit run src/main.py \
     --server.port ${DASHBOARD_PORT} \
     --server.runOnSave true
@@ -177,7 +177,7 @@ With Docker, run the dashboard with the command:
 
 ```shell
 export DASHBOARD_PORT=<port>
-docker run --rm \
+uv run --rm \
     --publish ${DASHBOARD_PORT}:${DASHBOARD_PORT} \
     --expose ${DASHBOARD_PORT} \
     --name dashboard-local-2 \

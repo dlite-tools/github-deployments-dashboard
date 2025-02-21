@@ -3,21 +3,20 @@ from datetime import datetime
 from os import getenv
 
 import streamlit as st
-
 from streamlit.delta_generator import DeltaGenerator
 
-from src.models.settings import (
-    GroupSettings,
-    TabSettings,
+from src.commons import (
+    column_ratio_is_valid,
+    load_repositories,
+    load_settings,
+    reload_settings,
 )
 from src.models.repository import (
     Repository,
 )
-from src.commons import (
-    column_ratio_is_valid,
-    load_settings,
-    load_repositories,
-    reload_settings,
+from src.models.settings import (
+    GroupSettings,
+    TabSettings,
 )
 from src.styles import (
     CENTER_HEADER,
@@ -63,7 +62,11 @@ def create_group(area: DeltaGenerator, group: GroupSettings, repos: dict[str, Re
             cols[0].markdown(f"[:{DASHBOARD_REPOSITORY_EMOJI}:]({repos[repo].url}) {repo}")
             for idx, env in enumerate(group.environments, start=1):
                 text = repos[repo].deployments[env].ref if env in repos[repo].deployments else "-"
-                time = repos[repo].deployments[env].created_at.strftime("%Y-%m-%d (%H:%M:%S)") if env in repos[repo].deployments else ""
+                time = (
+                    repos[repo].deployments[env].created_at.strftime("%Y-%m-%d (%H:%M:%S)")
+                    if env in repos[repo].deployments
+                    else ""
+                )
                 cols[idx].markdown(CENTER_REF.format(text=text, time=time), unsafe_allow_html=True)
         area.markdown(HR_NO_MARGIN, unsafe_allow_html=True)
 
@@ -112,7 +115,11 @@ for st_tab, config_tab in zip(st_tabs, SETTINGS.tabs):
         st.warning("There are no groups configured.")
         st.stop()
 
-    st_groups = [st_tab.container()] if len(config_tab.groups) == 1 else st_tab.tabs([group.title for group in config_tab.groups])
+    st_groups = (
+        [st_tab.container()]
+        if len(config_tab.groups) == 1
+        else st_tab.tabs([group.title for group in config_tab.groups])
+    )
 
     for st_group, config_group in zip(st_groups, config_tab.groups):
         create_group(st_group, config_group, DASHBOARD_REPOS)

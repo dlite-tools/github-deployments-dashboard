@@ -2,12 +2,11 @@
 from os import getenv
 from typing import Any
 from urllib.parse import (
-    urlparse,
     parse_qs,
+    urlparse,
 )
 
 import requests
-
 
 DASHBOARD_GITHUB_TOKEN = getenv("DASHBOARD_GITHUB_TOKEN", "")
 

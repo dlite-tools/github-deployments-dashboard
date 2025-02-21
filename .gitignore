@@ -10,6 +10,8 @@
 .pytest_cache
 .import_linter_cache
 *.egg-info
+.ruff_cache
+.pdm-build
 
 # Others
 local.env

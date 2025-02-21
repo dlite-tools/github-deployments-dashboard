@@ -1,8 +1,7 @@
 """Common functions for the dashboard."""""
+import json
 from concurrent import futures
 from itertools import chain
-
-import json
 
 from src.models.repository import (
     Deployment,

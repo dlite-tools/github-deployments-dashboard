@@ -1,26 +1,77 @@
-[tool.poetry]
-name = "Github Deployments Dashboard"
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project]
+name = "github-deployments-dashboard"
 version = "0.0.1"
 description = "Streamlit dashboard to monitor Github deployments"
 authors = [
-    "Daniel Ferrari <ferraridg@users.noreply.github.com>",
+    {name = "Daniel Ferrari", email = "ferraridg@users.noreply.github.com"},
 ]
-license = "MIT"
+license = {file = "LICENSE.txt"}
+readme = "README.md"
 
-[tool.poetry.dependencies]
-python = "~3.10"
-streamlit = "^1.25.0"
-requests = "^2.31.0"
-pydantic = "^2.1.1"
-watchdog = "^3.0.0"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.10.6",
+    "requests>=2.32.3",
+    "streamlit>=1.42.2",
+    "watchdog>=6.0.0",
+]
 
-[tool.poetry.group.dev.dependencies]
-flake8 = "*"
-import-linter = "*"
-mypy = "*"
-pydocstyle = "*"
-types-requests = "*"
+[dependency-groups]
+dev = [
+    "import-linter>=2.2",
+    "mypy>=1.15.0",
+    "ruff>=0.9.7",
+    "types-requests>=2.32.0.20241016",
+]
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_configs = true
+check_untyped_defs = true
+allow_redefinition = true
+strict_optional = false
+
+[tool.ruff]
+line-length = 120
+indent-width = 4
+target-version = "py312"
+src = ["src"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint]
+select = [
+    "D",     # docstring
+    "F",     # flake8
+    "E",     # pycodestyle
+    "W",     # pycodestyle
+    "I001",  # isort
+    "C90",   # mccabe (complexity)
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "D104"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.importlinter]
+root_package = "src"
+
+[[tool.importlinter.contracts]]
+name = "Layers Contract"
+type = "layers"
+layers = [
+    "src.tools",
+    "src.models",
+]
