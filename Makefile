@@ -5,22 +5,21 @@ export PYTHONPATH := .:$(PYTHONPATH)
 
 install:
 	###### Installing dependencies ######
-	poetry install --no-root
+	uv sync --no-install-project
 
 tests:
 	###### Running static tests ######
-	poetry run flake8 src
-	poetry run mypy src
-	poetry run pydocstyle src
-	poetry run lint-imports
+	uv run mypy src
+	uv run lint-imports
+	uv run ruff check src
 
 check:
 	###### Checking data ######
-	poetry run python src/check_data.py
+	uv run python src/check_data.py
 
 dashboard:
 	###### Running dashboard ######
-	poetry run streamlit run src/main.py --server.port ${DASHBOARD_PORT} --server.runOnSave true
+	uv run streamlit run src/main.py --server.port ${DASHBOARD_PORT} --server.runOnSave true
 
 build:
 	###### Building image ######
